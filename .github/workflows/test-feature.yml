@@ -1,0 +1,37 @@
+name: Test feature
+on:
+  push:
+    branches: "main"
+    paths-ignore:
+      - .gitignore
+      - LICENSE
+      - README.md
+      - .github/**
+      - "!.github/workflows/test-feature.yml"
+  pull_request:
+    paths-ignore:
+      - .gitignore
+      - LICENSE
+      - README.md
+      - .github/**
+      - "!.github/workflows/test-feature.yml"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-feature:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: mcr.microsoft.com/devcontainers/base:ubuntu
+            options: '{ "version": "13" }'
+          - image: debian:bookworm-slim
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install -g @devcontainers/cli
+      - run: bash test.sh "$IMAGE" "$OPTIONS"
+        env:
+          IMAGE: ${{ matrix.image }}
+          OPTIONS: ${{ matrix.options }}

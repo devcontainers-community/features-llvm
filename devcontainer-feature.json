@@ -1,5 +1,6 @@
 {
   "id": "llvm",
+  "version": "1.0.0",
   "name": "LLVM",
   "documentationURL": "https://github.com/devcontaineres-community/features-llvm#readme",
   "options": {

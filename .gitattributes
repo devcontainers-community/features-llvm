@@ -1,0 +1,3 @@
+*.sh eol=lf
+.bashrc eol=lf
+bash.bash_env eol=lf

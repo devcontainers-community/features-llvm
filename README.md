@@ -17,8 +17,8 @@
 
 ### Options
 
-- **`version`:** Pin to a specific LLVM toolchain version. Can also be `latest`
-  to use the most recent version. The default is `latest`.
+- **`version`:** Choose a specific major toolchain version (like `13`). Can also
+  be `dev`. Default is `dev`.
 
 <!-- prettier-ignore -->
 [this vs code blog post]: https://code.visualstudio.com/blogs/2022/09/15/dev-container-features

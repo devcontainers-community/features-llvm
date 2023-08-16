@@ -1,49 +1,96 @@
-#!/bin/bash
-set -e
+#! /usr/bin/env bash
+set -ex
 
-ensure_apt_packages() (
-  set -e
+# Ensure we're in this feature's directory during build
+cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )";
 
-  export DEBIAN_FRONTEND=noninteractive
-  if dpkg -s "$@" &>/dev/null; then
-    echo "🟦 $@ is already installed"
-  else
-    if [[ $(find /var/lib/apt/lists/* | wc -l) == 0 ]]; then
-      echo '🟪 Updating local apt index...'
-      apt-get update -y
-      echo '🟩 Updated local apt index'
-    fi
-    echo "🟪 Installing $@..."
-    apt-get install -y --no-install-recommends "$@"
-    echo "🟩 Installed $@"
-  fi
-)
+# install global/common scripts
+. ./common/install.sh;
 
-clear_local_apt_index() (
-  set -e
-  
-  rm -rf /var/lib/apt/lists/*
-  echo '🟩 Cleared local apt index'
-)
+LLVM_VERSION="${VERSION:-}";
 
-ensure_apt_packages curl ca-certificates jq
+check_packages                  \
+    gpg                         \
+    wget                        \
+    apt-utils                   \
+    lsb-release                 \
+    gettext-base                \
+    bash-completion             \
+    ca-certificates             \
+    apt-transport-https         \
+    software-properties-common  \
+    ;
 
-if [[ -z $VERSION || $VERSION == latest ]]; then
-  echo "🟪 Fetching latest LLVM release..."
-  curl -fsSLo latest-release.json https://api.github.com/repos/llvm/llvm-project/releases/latest
-  version=$(jq -r .tag_name latest-release.json | sed 's/^llvmorg-//')
-  echo "🟦 Using latest LLVM release: v$version"
-else
-  version="$VERSION"
-  echo "🟦 Using LLVM release: v$version"
+if [[ -z "$LLVM_VERSION" \
+      || "$LLVM_VERSION" == "latest" \
+      || "$LLVM_VERSION" == "dev" \
+      || "$LLVM_VERSION" == "pre" \
+      || "$LLVM_VERSION" == "prerelease" \
+]]; then
+    LLVM_VERSION="latest";
+    find_version_from_git_tags \
+        LLVM_VERSION \
+        https://github.com/llvm/llvm-project \
+        "tags/llvmorg-" "." "-init" "true";
+    LLVM_VERSION="$(echo $LLVM_VERSION | grep -oP '[0-9]+')";
 fi
 
-ensure_apt_packages lsb-release wget software-properties-common gnupg
+echo "Installing llmv-${LLVM_VERSION} compilers and tools";
 
-echo "🟪 Installing LLVM v$version..."
-wget https://apt.llvm.org/llvm.sh
-chmod +x llvm.sh
-./llvm.sh "$version"
-echo "🟩 Installed LLVM v$version"
+./llvm.sh $LLVM_VERSION all;
 
-clear_local_apt_index
+# # Remove existing cc/c++ alternatives
+# (update-alternatives --remove-all cc           >/dev/null 2>&1 || true);
+# (update-alternatives --remove-all c++          >/dev/null 2>&1 || true);
+
+# # Install cc/c++ alternatives
+# update-alternatives                                                                    \
+#     --install /usr/bin/cc           cc           $(which clang-${LLVM_VERSION}) 30     \
+#     --slave   /usr/bin/c++          c++          $(which clang++-${LLVM_VERSION})      \
+#     ;
+
+# # Set default cc/c++ alternatives
+# update-alternatives --set cc $(which clang-${LLVM_VERSION});
+
+# Remove existing clang/llvm alternatives
+(update-alternatives --remove-all clang        >/dev/null 2>&1 || true);
+(update-alternatives --remove-all clangd       >/dev/null 2>&1 || true);
+(update-alternatives --remove-all clang++      >/dev/null 2>&1 || true);
+(update-alternatives --remove-all clang-format >/dev/null 2>&1 || true);
+(update-alternatives --remove-all clang-tidy   >/dev/null 2>&1 || true);
+(update-alternatives --remove-all lldb         >/dev/null 2>&1 || true);
+(update-alternatives --remove-all llvm-config  >/dev/null 2>&1 || true);
+(update-alternatives --remove-all llvm-cov     >/dev/null 2>&1 || true);
+
+# Install clang/llvm alternatives
+update-alternatives                                                                    \
+    --install /usr/bin/clang        clang        $(which clang-${LLVM_VERSION}) 30     \
+    --slave   /usr/bin/clangd       clangd       $(which clangd-${LLVM_VERSION})       \
+    --slave   /usr/bin/clang++      clang++      $(which clang++-${LLVM_VERSION})      \
+    --slave   /usr/bin/clang-format clang-format $(which clang-format-${LLVM_VERSION}) \
+    --slave   /usr/bin/clang-tidy   clang-tidy   $(which clang-tidy-${LLVM_VERSION})   \
+    --slave   /usr/bin/lldb         lldb         $(which lldb-${LLVM_VERSION})         \
+    --slave   /usr/bin/llvm-config  llvm-config  $(which llvm-config-${LLVM_VERSION})  \
+    --slave   /usr/bin/llvm-cov     llvm-cov     $(which llvm-cov-${LLVM_VERSION})     \
+    ;
+
+# Set default clang/llvm alternatives
+update-alternatives --set clang $(which clang-${LLVM_VERSION});
+
+export LLVM_VERSION="${LLVM_VERSION}";
+
+# export envvars in bashrc files
+append_to_etc_bashrc "$(cat .bashrc | envsubst)";
+append_to_all_bashrcs "$(cat .bashrc | envsubst)";
+# export envvars in /etc/profile.d
+add_etc_profile_d_script llvm "$(cat .bashrc | envsubst)";
+
+# Copy clangd config into etc/skel
+mkdir -p -m 0755 /etc/skel/.config/clangd/;
+cp .clangd /etc/skel/.config/clangd/config.yaml;
+
+# Clean up
+# rm -rf /tmp/*;
+rm -rf /var/tmp/*;
+rm -rf /var/cache/apt/*;
+rm -rf /var/lib/apt/lists/*;

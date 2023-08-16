@@ -8,7 +8,7 @@
 // devcontainer.json
 {
   "features": {
-    "ghcr.io/octocat/features/llvm": {}
+    "ghcr.io/devcontainers-community/features/llvm": {}
   }
 }
 ```
@@ -17,8 +17,8 @@
 
 ### Options
 
-- **`version`:** Choose a specific major toolchain version (like `13`). Can also
-  be `dev`. Default is `dev`.
+Currently no options. If you'd like to add a `version` option, that'd be
+awesome! ❤️
 
 <!-- prettier-ignore -->
 [this vs code blog post]: https://code.visualstudio.com/blogs/2022/09/15/dev-container-features

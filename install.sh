@@ -19,7 +19,7 @@ check_packages lsb-release wget software-properties-common gnupg
 cd /tmp
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
-./llvm.sh $VERSION
+./llvm.sh $VERSION all
 rm llvm.sh
 
 ln -sf /usr/bin/clang-${MAJOR_VERSION} /usr/bin/clang

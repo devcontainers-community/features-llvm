@@ -41,7 +41,7 @@ chmod +x llvm.sh
 rm llvm.sh
 
 # Remove downloads to keep Docker layer small
-apt-get clean -y && rm -rf /var/lib/apt/lists/
+apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 ln -sf /usr/bin/clang-${MAJOR_VERSION} /usr/bin/clang
 ln -sf /usr/bin/clang++-${MAJOR_VERSION} /usr/bin/clang++

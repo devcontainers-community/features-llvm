@@ -4,7 +4,6 @@ set -e
 if [ "$VERSION" == "latest" ]; then
   VERSION=
 fi
-MAJOR_VERSION=${VERSION%%.*}
 
 # Function to run apt-get if needed
 apt_get_update_if_needed()
@@ -49,7 +48,28 @@ rm llvm.sh
 # Remove downloads to keep Docker layer small
 apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-ln -sf /usr/bin/clang-${MAJOR_VERSION} /usr/bin/clang
-ln -sf /usr/bin/clang++-${MAJOR_VERSION} /usr/bin/clang++
-ln -sf /usr/bin/lld-${MAJOR_VERSION} /usr/bin/lld
-ln -sf /usr/bin/ld.lld-${MAJOR_VERSION} /usr/bin/ld.lld
+llvm_root_prefix=/usr/lib/llvm-
+
+if [ -z $VERSION ]; then
+  # Detect the latest version if it is "latest".
+  llvm_latest_version=
+  for llvm in ${llvm_root_prefix}*; do
+    llvm_version=${llvm##$llvm_root_prefix}
+    if [ ! -f ${llvm_root_prefix}${llvm_version}/bin/llvm-config ]; then
+      continue
+    fi
+    if [[ -z $llvm_latest_version || llvm_version -gt llvm_latest_version ]]; then
+      llvm_latest_version=$llvm_version
+    fi
+  done
+  VERSION=$llvm_latest_version
+fi
+
+llvm_root=${llvm_root_prefix}${VERSION}
+
+for bin in $llvm_root/bin/*; do
+  bin=$(basename $bin)
+  if [ -f /usr/bin/$bin-$VERSION ]; then
+    ln -sf /usr/bin/$bin-$VERSION /usr/bin/$bin
+  fi
+done

@@ -34,6 +34,12 @@ if dpkg -s llvm > /dev/null 2>&1; then
   apt-get purge -y llvm && apt-get autoremove -y
 fi
 
+# Hack for apt-add-repository bug on Debian bookworm
+# https://github.com/hof/bookworm-apt-add-repository-issue
+if [ ! -f "/etc/apt/sources.list" ]; then
+  echo '#' > /etc/apt/sources.list
+fi
+
 cd /tmp
 wget https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh

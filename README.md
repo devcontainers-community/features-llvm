@@ -17,8 +17,10 @@
 
 ### Options
 
-Currently no options. If you'd like to add a `version` option, that'd be
-awesome! ❤️
+| Options Id | Description | Type | Default Value |
+|-----|-----|-----|-----|
+| version | LLVM version | string | latest |
+
 
 <!-- prettier-ignore -->
 [this vs code blog post]: https://code.visualstudio.com/blogs/2022/09/15/dev-container-features

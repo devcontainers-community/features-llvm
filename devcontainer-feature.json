@@ -4,7 +4,19 @@
   "name": "llvm",
   "documentationURL": "https://github.com/devcontainers-community/features-llvm",
   "description": "Installs llvm on debian based systems",
-  "options": {},
+  "options": {
+    "version": {
+      "type": "string",
+      "proposals": [
+        "latest",
+        "18",
+        "17",
+        "16"
+      ],
+      "default": "latest",
+      "description": "LLVM version"
+    }
+  },
   "mounts": [],
   "installsAfter": [
       "ghcr.io/devcontainers/features/common-utils"

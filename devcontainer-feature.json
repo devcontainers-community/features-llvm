@@ -1,6 +1,6 @@
 {
   "id": "llvm",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "name": "llvm",
   "documentationURL": "https://github.com/devcontainers-community/features-llvm",
   "description": "Installs llvm on debian based systems",

@@ -26,6 +26,13 @@ check_packages() {
 
 check_packages lsb-release wget gnupg
 
+# llvm.sh requires software-properties-common in distro-versions where it is still available
+apt_get_update_if_needed
+SPCCHECK=$(apt-cache search software-properties-common)
+if [ ! -z "$SPCCHECK" ]; then
+  apt-get -y install --no-install-recommends software-properties-common
+fi
+
 # Remove any previous LLVM that may be in the base image
 # LLVM packages packaged by Ubuntu may get picked over us and
 # cause problems later.
@@ -40,7 +47,7 @@ if [ ! -f "/etc/apt/sources.list" ]; then
 fi
 
 cd /tmp
-wget https://apt.llvm.org/llvm.sh
+wget --no-check-certificate https://apt.llvm.org/llvm.sh
 chmod +x llvm.sh
 ./llvm.sh $VERSION all
 rm llvm.sh

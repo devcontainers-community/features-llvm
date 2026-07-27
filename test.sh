@@ -17,6 +17,6 @@ cat <<EOF | tee .devcontainer/devcontainer.json
 EOF
 rsync -av --exclude .git "$feature_dir/" "$PWD/.devcontainer/feature/"
 tree -a
-container_id=$(devcontainer up --workspace-folder . | jq -r .containerId)
+container_id=$(devcontainer up --workspace-folder . | grep outcome | jq -r .containerId)
 devcontainer exec --workspace-folder . clang --version
 docker kill "$container_id"
